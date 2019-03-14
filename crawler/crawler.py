@@ -11,11 +11,18 @@ import urllib.robotparser
 from urllib.parse import urlparse
 
 #url1 = "http://www.upravneenote.gov.si"
-url1 = "http://www.mizs.gov.si/"
-links = links.get_links(url1)
-database.write_url_to_database(links)
+
+#chech first page in crawldb.page which is FRONTIER
+
+print(database.getN_frontiers(1))
+
+
+
+#url1 = "http://www.mizs.gov.si/"
+#links = links.get_links(url1)
+#database.write_url_to_database(links)
 
 #from frontier... from current link get images
-database.write_image_to_database(url1)
+#database.write_image_to_database(url1)
 
 #images.get_images(url1)
