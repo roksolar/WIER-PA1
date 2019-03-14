@@ -15,7 +15,11 @@ def get_images(url1):
     driver.get(url1)
 
     images = driver.find_elements_by_tag_name("img")
+    a = []
     for image in images:
         print(image.get_attribute('src'))
+        a.append(image.get_attribute('src'))
 
     driver.close()
+
+    return a

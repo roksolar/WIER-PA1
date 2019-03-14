@@ -68,6 +68,7 @@ def get_links(url1):
     # for link in soup.findAll('a'):
     #             tet_2 = link.get('href')
     #             print(tet_2)
+    return links
 
 def parse_links(potential_links, links, robots):
     for potential_link in potential_links:
