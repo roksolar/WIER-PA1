@@ -38,15 +38,15 @@ def write_image_to_database(url):
 def getN_frontiers(n):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
-    sql = '''SELECT * FROM crawldb.page
-    JOIN crawldb.site ON (crawldb.page.site_id = crawldb.site.id)
+    sql = '''SELECT page.id, page.site_id, page.page_type_code, page.url, page.html_content, page.http_status_code
+, page.accessed_time, site.domain, site.robots_content, site.sitemap_content FROM crawldb.page page
+    JOIN crawldb.site site ON (page.site_id = site.id)
     WHERE page_type_code = 'FRONTIER'
-    ORDER BY crawldb.page.id asc
+    ORDER BY page.id asc
     LIMIT %s'''
     try:
-        print(sql)
         cur.execute(sql,(n,))
-        print(cur.fetchall())
+        return cur.fetchall()
     except :
         print("Error while writing image to database")
         return -1

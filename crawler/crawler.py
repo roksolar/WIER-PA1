@@ -2,7 +2,7 @@ import os
 import images
 import links
 import database
-
+from page import Page
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
@@ -14,9 +14,11 @@ from urllib.parse import urlparse
 
 #chech first page in crawldb.page which is FRONTIER
 
-print(database.getN_frontiers(1))
 
-
+page = Page(*(database.getN_frontiers(1)[0]))
+# 1. Check domain robots and sitemap
+# 2. Read page, write html, status code and accessed time
+# 3. Get links, write new pages & sites.
 
 #url1 = "http://www.mizs.gov.si/"
 #links = links.get_links(url1)
