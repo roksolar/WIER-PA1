@@ -28,7 +28,7 @@ def write_image_to_database(url):
               'VALUES ((SELECT id from crawldb.page WHERE url=%s), %s)'
         try:
             print(sql, (image,url,))
-            cur.execute(sql, (image,url,))
+            cur.execute(sql, (url,image,))
         except:
             print("Error while writing image to database")
     conn.commit()
