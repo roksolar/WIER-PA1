@@ -1,17 +1,20 @@
 import re
 import urllib.robotparser
+import urlcanon
 from urllib.parse import urlparse, urljoin, urlsplit
 import requests
 import regex as regex
-import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from url_normalize import url_normalize
 from urllib.parse import urldefrag
+
+
 def get_links(url1):
     #url1 = "http://localhost:8080/"
-    url1 = "http://www.e-prostor.gov.si"
+    #url1 = "http://www.e-prostor.gov.si"
+    #url1 = "https://ucilnica.fri.uni-lj.si"
+    links = []
     # Parsing ROBOTS.TXT
     robots_url = urlparse(url1).scheme + "://" + urlparse(url1).netloc + "/robots.txt"
     rp = urllib.robotparser.RobotFileParser()
@@ -29,15 +32,13 @@ def get_links(url1):
         print("Crawl delay: " + str(cdelay))
 
     #Sitemap
-    parse_sitemap(robots_url)
+    links = parse_links(parse_sitemap(robots_url), links, rp)
 
     # Branje s Selenium
     options = Options()
     options.add_argument("--headless")
     driver = webdriver.Chrome('./chromedriver.exe', options=options)
     driver.get(url1)
-
-    links = []
 
     # Linki v js (gumbi) s Selenium
     js_code = driver.find_elements_by_xpath("//button[@onclick]")
@@ -55,14 +56,13 @@ def get_links(url1):
 
     # a...href linki s Selenium
     elems = driver.find_elements_by_xpath("//a[@href]")
+    urls = []
     for elem in elems:
-        link = elem.get_attribute("href")
-        # Pridobi domeno in dovoli, če vsebuje .gov.si in če robots dovoljuje
-
-        links = parse_links([link], links, rp)
+        urls.append(elem.get_attribute("href"))
+    links = parse_links(urls, links, rp)
 
     driver.close()
-    print(links)
+    print(len(links))
     # Beautiful soup pridobivanje linkov. Ne doda predpone relativnim linkom
     # soup = BeautifulSoup(driver.page_source, 'html.parser')
     # for link in soup.findAll('a'):
@@ -71,30 +71,33 @@ def get_links(url1):
 
 def parse_links(potential_links, links, robots):
     for potential_link in potential_links:
-        #print("navaden     " + potential_link)
-        #print(urlparse(potential_link))
-        #a = urlparse(potential_link)
-        #r1 = urlsplit(potential_link)
-        #r2 = urlsplit(r1.geturl())
-        #print("kanoniziran " + urldefrag(a.hostname + )[0])
-        #print("\n")
-        # TODO: REMOVE PORT NUMBBER.
-        # TODO: HTTPS/HTTP??
+        # TODO: HTTPS/HTTP, WWW predpona, javascript:void(0);
+        #Odstrani #...
         link = urldefrag(potential_link)[0]
+        #ta še porte odstrani
+        parsed_url = urlcanon.parse_url(link)
+        urlcanon.whatwg(parsed_url)
+        #print("navaden       " + potential_link)
+        #print("urldefrah     " + link)
+        #print("canon         "  + str(parsed_url))
+        #print("\n")
         baseURL = urlparse(link).netloc
         if ".gov.si" in baseURL and robots.can_fetch("*", link) and link not in links:
             links.append(link)
     return links
 
 def parse_sitemap(robots_url):
-    line = None
+    sitemap_url = None
+    links = []
     response = requests.get(robots_url)
     for line in response.text.split("\n"):
         if line.lower().startswith("sitemap"):
-            line = line.replace("sitemap:", "").replace("Sitemap:", "")
-            print(line)
+            sitemap_url = line.replace("sitemap:", "").replace("Sitemap:", "")
             break
-    #TODO: GE LINKS FROM XML
-    response = requests.get(line)
-    print(response.text)
-    return line
+    if sitemap_url is not None:
+        #Get links from sitemap XML
+        sitemap = requests.get(sitemap_url).text
+        urls = BeautifulSoup(sitemap, 'html.parser').find_all("url")
+        for url in urls:
+            links.append(url.find("loc").text)
+    return links
