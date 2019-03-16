@@ -30,7 +30,6 @@ def get_sitemap(robots_content):
 
 page = Page(*(database.getN_frontiers(1)[0]))
 
-# A je kdaj kj od tega zafilan ko prebereš iz baze?
 # 1. Check domain robots and sitemap
 if page.robots_content is None:
     page.robots_content = requests.get("http://" + page.domain + "/robots.txt").text #Tukj predpostavlam da te avtomatsko na https da če ni http
@@ -39,18 +38,28 @@ if page.robots_content is None:
     database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
 
 # 2. Read page, write html, status code and accessed time
-# Branje s Selenium
-options = Options()
-options.add_argument("--headless")
-driver = webdriver.Chrome('./chromedriver.exe', options=options)
-driver.get("http://" + page.url)
-page.html_content = driver.page_source
-#Ločen request za response code?
-page.http_status_code = requests.get("http://" + page.url).status_code
+response = requests.head("http://" + page.url)# timeout=self.pageOpenTimeout, headers=customHeaders)
+page.http_status_code = response.status_code
 page.accessed_time = datetime.datetime.now()
-# 3. Get links, write new pages & sites.
-database.write_url_to_database(links.get_links(page, driver))
+page.content_type = response.headers['content-type']
+# HTML
+if "text/html" in page.content_type:
+    page.page_type_code = "HTML"
+    # Branje s Selenium
+    options = Options()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome('./chromedriver.exe', options=options)
+    driver.get("http://" + page.url)
+    page.html_content = driver.page_source
 
+    # 3. Get links, write new pages & sites.
+    database.write_url_to_database(links.get_links(page, driver))
+# OTHER CONTENT TYPE
+else:
+    page.page_type_code = "BINARY"
+    page.html_content = None
+    # TODO: samo pdf, doc, docx, ppt in pptx. kaj z ostalimi?
+    page.binary_data = requests.get("http://" + page.url).content #Ne vem če je to to kar je treba shrant
 
 #url1 = "http://www.mizs.gov.si/"
 #links = links.get_links(url1)

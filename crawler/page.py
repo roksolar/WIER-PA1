@@ -1,4 +1,6 @@
 class Page:
+    content_type = None
+    binary_data = None
     def __init__(self, page_id, site_id, page_type_code, url, html_content, http_status_code, accessed_time, domain, robots_content, sitemap_content):
         self.page_id = page_id
         self.site_id = site_id
