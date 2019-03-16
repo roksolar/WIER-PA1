@@ -83,8 +83,8 @@ def parse_links(potential_links, links, robots):
         # Base URL
         baseURL = str(urlparse(parsed_url).netloc)
         # Add www. to base URL
-        if not baseURL.startswith("www."):
-            baseURL = "www." + baseURL
+        if baseURL.startswith("www."):
+            baseURL = baseURL[4:]
 
         # Remove trailing slash. To ne vem če je prov
         if parsed_url.endswith('/'):
@@ -101,13 +101,13 @@ def parse_links(potential_links, links, robots):
         # Remove https://
         if parsed_url.startswith('https://'):
             parsed_url = parsed_url[8:]
-        if not parsed_url.startswith('www.'):
-            parsed_url = "www." + parsed_url
-        #print("navaden       " + potential_link)
-        #print("canon         " + parsed_url)
+        if parsed_url.startswith('www.'):
+            parsed_url = parsed_url[4:]
+        print("navaden       " + potential_link)
+        print("canon         " + parsed_url)
 
-        #print("baseURL       " + baseURL)
-        #print("\n")
+        print("baseURL       " + baseURL)
+        print("\n")
 
         if ".gov.si" in baseURL and robots.can_fetch("*", parsed_url) and parsed_url not in links:
             links.append((parsed_url,baseURL))
@@ -121,3 +121,4 @@ def parse_sitemap(sitemap_content):
         for url in urls:
             links.append(url.find("loc").text)
     return links
+
