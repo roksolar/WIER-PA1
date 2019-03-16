@@ -35,9 +35,8 @@ page = Page(*(database.getN_frontiers(1)[0]))
 if page.robots_content is None:
     page.robots_content = requests.get("http://" + page.domain + "/robots.txt").text #Tukj predpostavlam da te avtomatsko na https da če ni http
     page.sitemap_content = get_sitemap(page.robots_content)
-
-#writing sitemap, robots and domain to site
-database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
+    #writing sitemap, robots and domain to site
+    database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
 
 # 2. Read page, write html, status code and accessed time
 # Branje s Selenium
@@ -50,9 +49,7 @@ page.html_content = driver.page_source
 page.http_status_code = requests.get("http://" + page.url).status_code
 page.accessed_time = datetime.datetime.now()
 # 3. Get links, write new pages & sites.
-print(links.get_links(page, driver))
-
-
+database.write_url_to_database(links.get_links(page, driver))
 
 
 #url1 = "http://www.mizs.gov.si/"

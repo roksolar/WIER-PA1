@@ -110,7 +110,7 @@ def parse_links(potential_links, links, robots):
         #print("\n")
 
         if ".gov.si" in baseURL and robots.can_fetch("*", parsed_url) and parsed_url not in links:
-            links.append(parsed_url)
+            links.append((parsed_url,baseURL))
     return links
 
 def parse_sitemap(sitemap_content):
