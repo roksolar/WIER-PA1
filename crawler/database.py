@@ -13,27 +13,36 @@ def write_url_to_database(links):
             sql = "SELECT id FROM crawldb.site WHERE domain = %s"
             cur.execute(sql, (link[1],))
             index = cur.fetchone()[0]
-        except:
-            print("Something is wrong with database or url is in database1")
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(e)
         print(index)
         if index == -1:
             #should add new site
             try:
                 sql = 'INSERT INTO crawldb.site(domain) VALUES (%s)'
-                cur.execute(sql, (link[1]), )
+                cur.execute(sql, (link[1], ))
+                conn.commit()
+                sql = "SELECT id FROM crawldb.site WHERE domain = %s"
+                cur.execute(sql, (link[1],))
                 index = cur.fetchone()[0]
-            except:
-                print("ERORR WHILE INSERTING NEW SITE")
+                conn.commit()
+
+            except Exception as e:
+                conn.rollback()
+                print(e)
 
         #INSERT NEW PAGE WITH SITE_ID = INDEX
         try:
             print(index)
-            sql = 'INSERT INTO crawldb.page(site_id, page_type_code,url) ' \
+            sql = 'INSERT INTO crawldb.page(site_id, page_type_code, url) ' \
                   'VALUES(%s, %s, %s)'
-            index = cur.execute(sql, (index, 'FRONTIER', link[0],))
+            cur.execute(sql, (index, 'FRONTIER', link[0],))
             print(index)
-        except:
-            print("Something is wrong with database or url is in database3")
+        except Exception as e:
+            conn.rollback()
+            print(e)
     conn.commit()
     cur.close()
 
