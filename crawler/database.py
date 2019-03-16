@@ -15,6 +15,19 @@ def write_url_to_database(links):
     conn.commit()
     cur.close()
 
+def write_site_to_database(robots,sitemap,domain):
+    #connect to database
+    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+    cur = conn.cursor()
+    try:
+        sql = "UPDATE crawldb.site SET robots_content = %s,sitemap_content=%s WHERE domain=%s"
+        print(sql)
+        cur.execute(sql, (robots, sitemap, domain, ))
+    except:
+        print("Something is wrongt!")
+    conn.commit()
+    cur.close()
+
 def write_image_to_database(url):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()

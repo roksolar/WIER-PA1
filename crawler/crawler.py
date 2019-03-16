@@ -32,8 +32,13 @@ page = Page(*(database.getN_frontiers(1)[0]))
 
 # A je kdaj kj od tega zafilan ko prebereš iz baze?
 # 1. Check domain robots and sitemap
-page.robots_content = requests.get("http://" + page.domain + "/robots.txt").text #Tukj predpostavlam da te avtomatsko na https da če ni http
-page.sitemap_content = get_sitemap(page.robots_content)
+if page.robots_content is None:
+    page.robots_content = requests.get("http://" + page.domain + "/robots.txt").text #Tukj predpostavlam da te avtomatsko na https da če ni http
+    page.sitemap_content = get_sitemap(page.robots_content)
+
+#writing sitemap, robots and domain to site
+database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
+
 # 2. Read page, write html, status code and accessed time
 # Branje s Selenium
 options = Options()
