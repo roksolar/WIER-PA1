@@ -6,12 +6,34 @@ def write_url_to_database(links):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
     for link in links:
+        print(link)
         #checking for unique url is done with unique url key
+        index = -1
         try:
-            sql = "INSERT INTO crawldb.page(url) VALUES(%s)"
-            cur.execute(sql, (link,))
+            sql = "SELECT id FROM crawldb.site WHERE domain = %s"
+            cur.execute(sql, (link[1],))
+            index = cur.fetchone()[0]
         except:
-            print("Something is wrong with database or url is in database")
+            print("Something is wrong with database or url is in database1")
+        print(index)
+        if index == -1:
+            #should add new site
+            try:
+                sql = 'INSERT INTO crawldb.site(domain) VALUES (%s)'
+                cur.execute(sql, (link[1]), )
+                index = cur.fetchone()[0]
+            except:
+                print("ERORR WHILE INSERTING NEW SITE")
+
+        #INSERT NEW PAGE WITH SITE_ID = INDEX
+        try:
+            print(index)
+            sql = 'INSERT INTO crawldb.page(site_id, page_type_code,url) ' \
+                  'VALUES(%s, %s, %s)'
+            index = cur.execute(sql, (index, 'FRONTIER', link[0],))
+            print(index)
+        except:
+            print("Something is wrong with database or url is in database3")
     conn.commit()
     cur.close()
 
