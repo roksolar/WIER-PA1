@@ -10,12 +10,14 @@ from bs4 import BeautifulSoup
 from urllib.parse import urldefrag
 
 
-def get_links(url1):
+def get_links(page, driver):
     #url1 = "http://localhost:8080/"
     #url1 = "http://www.e-prostor.gov.si"
+    #url1 = "http://www.mizs.gov.si/"
     #url1 = "https://ucilnica.fri.uni-lj.si"
     links = []
     # Parsing ROBOTS.TXT
+    url1 = "http://" + page.url
     robots_url = urlparse(url1).scheme + "://" + urlparse(url1).netloc + "/robots.txt"
     rp = urllib.robotparser.RobotFileParser()
     rp.set_url(robots_url)
@@ -32,13 +34,7 @@ def get_links(url1):
         print("Crawl delay: " + str(cdelay))
 
     #Sitemap
-    links = parse_links(parse_sitemap(robots_url), links, rp)
-
-    # Branje s Selenium
-    options = Options()
-    options.add_argument("--headless")
-    driver = webdriver.Chrome('./chromedriver.exe', options=options)
-    driver.get(url1)
+    links = parse_links(parse_sitemap(page.sitemap_content), links, rp)
 
     # Linki v js (gumbi) s Selenium
     js_code = driver.find_elements_by_xpath("//button[@onclick]")
@@ -62,7 +58,7 @@ def get_links(url1):
     links = parse_links(urls, links, rp)
 
     driver.close()
-    print(len(links))
+    #print(len(links))
     # Beautiful soup pridobivanje linkov. Ne doda predpone relativnim linkom
     # soup = BeautifulSoup(driver.page_source, 'html.parser')
     # for link in soup.findAll('a'):
@@ -72,33 +68,56 @@ def get_links(url1):
 
 def parse_links(potential_links, links, robots):
     for potential_link in potential_links:
-        # TODO: HTTPS/HTTP, WWW predpona, javascript:void(0);
+        #avascript:void(0); pa to.
+        if "javascript:" in potential_link.lower():
+           continue
+
         #Odstrani #...
         link = urldefrag(potential_link)[0]
+
         #ta še porte odstrani
         parsed_url = urlcanon.parse_url(link)
         urlcanon.whatwg(parsed_url)
+        parsed_url = str(parsed_url)
+
+        # Base URL
+        baseURL = str(urlparse(parsed_url).netloc)
+        # Add www. to base URL
+        if not baseURL.startswith("www."):
+            baseURL = "www." + baseURL
+
+        # Remove trailing slash. To ne vem če je prov
+        if parsed_url.endswith('/'):
+            parsed_url = parsed_url[:-1]
+        # Remove /index.html
+        if parsed_url.endswith('/index.html'):
+            parsed_url = parsed_url[:-11]
+        # Remove /index.php
+        if parsed_url.endswith('/index.php'):
+            parsed_url = parsed_url[:-10]
+        # Remove http://
+        if parsed_url.startswith('http://'):
+            parsed_url = parsed_url[7:]
+        # Remove https://
+        if parsed_url.startswith('https://'):
+            parsed_url = parsed_url[8:]
+        if not parsed_url.startswith('www.'):
+            parsed_url = "www." + parsed_url
         #print("navaden       " + potential_link)
-        #print("urldefrah     " + link)
-        #print("canon         "  + str(parsed_url))
+        #print("canon         " + parsed_url)
+
+        #print("baseURL       " + baseURL)
         #print("\n")
-        baseURL = urlparse(link).netloc
-        if ".gov.si" in baseURL and robots.can_fetch("*", link) and link not in links:
-            links.append(link)
+
+        if ".gov.si" in baseURL and robots.can_fetch("*", parsed_url) and parsed_url not in links:
+            links.append(parsed_url)
     return links
 
-def parse_sitemap(robots_url):
-    sitemap_url = None
+def parse_sitemap(sitemap_content):
     links = []
-    response = requests.get(robots_url)
-    for line in response.text.split("\n"):
-        if line.lower().startswith("sitemap"):
-            sitemap_url = line.replace("sitemap:", "").replace("Sitemap:", "")
-            break
-    if sitemap_url is not None:
+    if sitemap_content is not None:
         #Get links from sitemap XML
-        sitemap = requests.get(sitemap_url).text
-        urls = BeautifulSoup(sitemap, 'html.parser').find_all("url")
+        urls = BeautifulSoup(sitemap_content, 'html.parser').find_all("url")
         for url in urls:
             links.append(url.find("loc").text)
     return links
