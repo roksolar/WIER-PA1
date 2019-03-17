@@ -54,6 +54,10 @@ if "text/html" in page.content_type:
 
     # 3. Get links, write new pages & sites.
     database.write_url_to_database(links.get_links(page, driver))
+
+    #update page
+    database.update_page("HTML", page.html_content, page.http_status_code, page.accessed_time,page.url)
+
 # OTHER CONTENT TYPE
 else:
     page.page_type_code = "BINARY"

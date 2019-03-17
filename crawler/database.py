@@ -46,6 +46,21 @@ def write_url_to_database(links):
     conn.commit()
     cur.close()
 
+def update_page(page_type,html,http_status,accessed,url):
+    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+    cur = conn.cursor()
+    try:
+        sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s WHERE url=%s"
+        cur.execute(sql, (page_type, html, http_status, accessed, url,))
+        conn.commit()
+    except Exception as e:
+        print(e)
+    conn.commit()
+    cur.close()
+
+    
+
+
 def write_site_to_database(robots,sitemap,domain):
     #connect to database
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
