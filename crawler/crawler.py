@@ -58,7 +58,7 @@ if "text/html" in page.content_type:
     database.write_url_to_database(links.get_links(page, driver), page.page_id)
 
     #update page
-    database.update_page("HTML", page.html_content, page.http_status_code, page.accessed_time,page.url)
+    database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
 
 # OTHER CONTENT TYPE
 else:
@@ -85,7 +85,8 @@ else:
         page.binary_data = requests.get("http://" + page.url).content
         page.data_type = "PPTX"
 
-
+    database.write_page_data(page.page_id, page.data_type, page.binary_data)
+    database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
 
 #url1 = "http://www.mizs.gov.si/"
 #links = links.get_links(url1)

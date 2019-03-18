@@ -82,6 +82,21 @@ def write_site_to_database(robots,sitemap,domain):
     conn.commit()
     cur.close()
 
+def write_page_data(page_id,data_type_code,data):
+
+    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+    cur = conn.cursor()
+
+    sql = 'INSERT INTO crawldb.page_data (page_id, data_type_code,data) ' \
+          'VALUES (%s,%s,%s)'
+    try:
+        cur.execute(sql, (page_id, data_type_code,data,))
+    except:
+        print("Error while writing image to database")
+
+    conn.commit()
+    cur.close()
+
 def write_image_to_database(url):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
