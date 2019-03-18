@@ -53,7 +53,7 @@ if "text/html" in page.content_type:
     page.html_content = driver.page_source
 
     # 3. Get links, write new pages & sites.
-    database.write_url_to_database(links.get_links(page, driver))
+    database.write_url_to_database(links.get_links(page, driver), page.page_id)
 
     #update page
     database.update_page("HTML", page.html_content, page.http_status_code, page.accessed_time,page.url)

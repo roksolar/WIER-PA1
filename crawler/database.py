@@ -1,7 +1,7 @@
 import psycopg2
 import images
 
-def write_url_to_database(links):
+def write_url_to_database(links,page_index):
     #connect to database
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
@@ -39,6 +39,9 @@ def write_url_to_database(links):
             sql = 'INSERT INTO crawldb.page(site_id, page_type_code, url) ' \
                   'VALUES(%s, %s, %s)'
             cur.execute(sql, (index, 'FRONTIER', link[0],))
+            index = cur.fetchone()[0]
+            sql = 'INSERT INTO crawldb.link(from_page,to_page) VALUES (%s,%s)'
+            cur.execute(sql, (page_index ,index,))
             print(index)
         except Exception as e:
             conn.rollback()
@@ -58,7 +61,7 @@ def update_page(page_type,html,http_status,accessed,url):
     conn.commit()
     cur.close()
 
-    
+
 
 
 def write_site_to_database(robots,sitemap,domain):
