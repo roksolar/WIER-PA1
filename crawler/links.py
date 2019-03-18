@@ -17,21 +17,21 @@ def get_links(page, driver):
     #url1 = "https://ucilnica.fri.uni-lj.si"
     links = []
     # Parsing ROBOTS.TXT
-    url1 = "http://" + page.url
+    url1 = page.redirected_to
     robots_url = urlparse(url1).scheme + "://" + urlparse(url1).netloc + "/robots.txt"
     rp = urllib.robotparser.RobotFileParser()
     rp.set_url(robots_url)
     rp.read()
-    rrate = rp.request_rate("*")
+    #rrate = rp.request_rate("*")
 
     # http://fortheloveofseo.com/blog/seo-basics/tutorial-robots-txt-your-guide-for-the-search-engines/
     # Request-rate = Koliko strani na koliko sekund lahko obiščeš
-    if rrate is not None:
-        print(str(rrate.requests) + " request per " + str(rrate.seconds) + " seconds")
-    cdelay = rp.crawl_delay("*")
+    #if rrate is not None:
+    #    print(str(rrate.requests) + " request per " + str(rrate.seconds) + " seconds")
+    #cdelay = rp.crawl_delay("*")
     # Crawl-delay = Koliko časa moraš počakat med requesti
-    if cdelay is not None:
-        print("Crawl delay: " + str(cdelay))
+    #if cdelay is not None:
+    #    print("Crawl delay: " + str(cdelay))
 
     #Sitemap
     links = parse_links(parse_sitemap(page.sitemap_content), links, rp)
@@ -103,11 +103,11 @@ def parse_links(potential_links, links, robots):
             parsed_url = parsed_url[8:]
         if parsed_url.startswith('www.'):
             parsed_url = parsed_url[4:]
-        print("navaden       " + potential_link)
-        print("canon         " + parsed_url)
+        #print("navaden       " + potential_link)
+        #print("canon         " + parsed_url)
 
-        print("baseURL       " + baseURL)
-        print("\n")
+        #print("baseURL       " + baseURL)
+        #print("\n")
 
         if ".gov.si" in baseURL and robots.can_fetch("*", parsed_url) and parsed_url not in links:
             links.append((parsed_url,baseURL))

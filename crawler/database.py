@@ -6,7 +6,7 @@ def write_url_to_database(links,page_index):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
     for link in links:
-        print(link)
+        #print(link)
         #checking for unique url is done with unique url key
         index = -1
         try:
@@ -17,7 +17,7 @@ def write_url_to_database(links,page_index):
         except Exception as e:
             conn.rollback()
             print(e)
-        print(index)
+        #print(index)
         if index == -1:
             #should add new site
             try:
@@ -35,7 +35,7 @@ def write_url_to_database(links,page_index):
 
         #INSERT NEW PAGE WITH SITE_ID = INDEX
         try:
-            print(index)
+            #print(index)
             sql = 'INSERT INTO crawldb.page(site_id, page_type_code, url) ' \
                   'VALUES(%s, %s, %s)'
             cur.execute(sql, (index, 'FRONTIER', link[0],))
@@ -46,11 +46,11 @@ def write_url_to_database(links,page_index):
 
             sql = 'INSERT INTO crawldb.link(from_page,to_page) VALUES (%s,%s)'
             cur.execute(sql, (page_index, index,))
-            print(index)
+            #print(index)
         except Exception as e:
             conn.rollback()
             print(e)
-            print("testasdas")
+            #print("testasdas")
     conn.commit()
     cur.close()
 
@@ -75,10 +75,11 @@ def write_site_to_database(robots,sitemap,domain):
     cur = conn.cursor()
     try:
         sql = "UPDATE crawldb.site SET robots_content = %s,sitemap_content=%s WHERE domain=%s"
-        print(sql)
+        #print(sql)
         cur.execute(sql, (robots, sitemap, domain, ))
-    except:
-        print("Something is wrongt!")
+    except Exception as e:
+        print(e)
+        #print("Something is wrongt!")
     conn.commit()
     cur.close()
 
@@ -91,7 +92,8 @@ def write_page_data(page_id,data_type_code,data):
           'VALUES (%s,%s,%s)'
     try:
         cur.execute(sql, (page_id, data_type_code,data,))
-    except:
+    except Exception as e:
+        print(e)
         print("Error while writing image to database")
 
     conn.commit()
@@ -109,9 +111,10 @@ def write_image_to_database(url):
         sql = 'INSERT INTO crawldb.image (page_id, filename) ' \
               'VALUES ((SELECT id from crawldb.page WHERE url=%s), %s)'
         try:
-            print(sql, (image,url,))
+            #print(sql, (image,url,))
             cur.execute(sql, (url,image,))
-        except:
+        except Exception as e:
+            print(e)
             print("Error while writing image to database")
     conn.commit()
     cur.close()
@@ -129,7 +132,8 @@ def getN_frontiers(n):
     try:
         cur.execute(sql,(n,))
         return cur.fetchall()
-    except :
+    except Exception as e:
+        print(e)
         print("Error while writing image to database")
         return -1
 
