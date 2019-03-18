@@ -64,8 +64,28 @@ if "text/html" in page.content_type:
 else:
     page.page_type_code = "BINARY"
     page.html_content = None
-    # TODO: samo pdf, doc, docx, ppt in pptx. kaj z ostalimi?
-    page.binary_data = requests.get("http://" + page.url).content #Ne vem če je to to kar je treba shrant
+    # PDF
+    if "application/pdf" in page.content_type:
+        page.binary_data = requests.get("http://" + page.url).content #Ne vem če je to to kar je treba shrant
+        page.data_type = "PDF"
+    # DOC
+    elif "application/msword" in page.content_type:
+        page.binary_data = requests.get("http://" + page.url).content
+        page.data_type = "DOC"
+    # DOCX
+    elif "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in page.content_type:
+        page.binary_data = requests.get("http://" + page.url).content
+        page.data_type = "DOCX"
+    # PPT
+    elif "application/vnd.ms-powerpoint" in page.content_type:
+        page.binary_data = requests.get("http://" + page.url).content
+        page.data_type = "PPT"
+    # PPTX
+    elif "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        page.binary_data = requests.get("http://" + page.url).content
+        page.data_type = "PPTX"
+
+
 
 #url1 = "http://www.mizs.gov.si/"
 #links = links.get_links(url1)
