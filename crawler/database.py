@@ -39,13 +39,18 @@ def write_url_to_database(links,page_index):
             sql = 'INSERT INTO crawldb.page(site_id, page_type_code, url) ' \
                   'VALUES(%s, %s, %s)'
             cur.execute(sql, (index, 'FRONTIER', link[0],))
+
+            sql = "SELECT id FROM crawldb.page WHERE url = %s"
+            cur.execute(sql, (link[0],))
             index = cur.fetchone()[0]
+
             sql = 'INSERT INTO crawldb.link(from_page,to_page) VALUES (%s,%s)'
-            cur.execute(sql, (page_index ,index,))
+            cur.execute(sql, (page_index, index,))
             print(index)
         except Exception as e:
             conn.rollback()
             print(e)
+            print("testasdas")
     conn.commit()
     cur.close()
 

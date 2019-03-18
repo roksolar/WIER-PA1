@@ -29,7 +29,7 @@ def get_sitemap(robots_content):
 #chech first page in crawldb.page which is FRONTIER
 
 page = Page(*(database.getN_frontiers(1)[0]))
-
+print(page)
 # 1. Check domain robots and sitemap
 if page.robots_content is None:
     page.robots_content = requests.get("http://" + page.domain + "/robots.txt").text #Tukj predpostavlam da te avtomatsko na https da če ni http
@@ -38,10 +38,12 @@ if page.robots_content is None:
     database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
 
 # 2. Read page, write html, status code and accessed time
-response = requests.head("http://" + page.url)# timeout=self.pageOpenTimeout, headers=customHeaders)
+response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
 page.http_status_code = response.status_code
 page.accessed_time = datetime.datetime.now()
+print(response.headers)
 page.content_type = response.headers['content-type']
+
 # HTML
 if "text/html" in page.content_type:
     page.page_type_code = "HTML"
