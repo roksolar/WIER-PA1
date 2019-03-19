@@ -16,7 +16,7 @@ def write_url_to_database(links,page_index):
             conn.commit()
         except Exception as e:
             conn.rollback()
-            print(e)
+            #print(e)
         #print(index)
         if index == -1:
             #should add new site
@@ -31,7 +31,7 @@ def write_url_to_database(links,page_index):
 
             except Exception as e:
                 conn.rollback()
-                print(e)
+                #print(e)
 
         #INSERT NEW PAGE WITH SITE_ID = INDEX
         try:
@@ -49,7 +49,7 @@ def write_url_to_database(links,page_index):
             #print(index)
         except Exception as e:
             conn.rollback()
-            print(e)
+            #print(e)
             #print("testasdas")
     conn.commit()
     cur.close()
@@ -62,7 +62,8 @@ def update_page(page_type,html,http_status,accessed,url):
         cur.execute(sql, (page_type, html, http_status, accessed, url,))
         conn.commit()
     except Exception as e:
-        print(e)
+        conn.rollback()
+        #print(e)
     conn.commit()
     cur.close()
 
@@ -78,7 +79,8 @@ def write_site_to_database(robots,sitemap,domain):
         #print(sql)
         cur.execute(sql, (robots, sitemap, domain, ))
     except Exception as e:
-        print(e)
+        conn.rollback()
+        #print(e)
         #print("Something is wrongt!")
     conn.commit()
     cur.close()
@@ -93,8 +95,9 @@ def write_page_data(page_id,data_type_code,data):
     try:
         cur.execute(sql, (page_id, data_type_code,data,))
     except Exception as e:
-        print(e)
-        print("Error while writing image to database")
+        conn.rollback()
+        #print(e)
+        #print("Error while writing image to database")
 
     conn.commit()
     cur.close()
@@ -114,8 +117,9 @@ def write_image_to_database(url):
             #print(sql, (image,url,))
             cur.execute(sql, (url,image,))
         except Exception as e:
-            print(e)
-            print("Error while writing image to database")
+            conn.rollback()
+            #print(e)
+            #print("Error while writing image to database")
     conn.commit()
     cur.close()
 
@@ -133,8 +137,8 @@ def getN_frontiers(n):
         cur.execute(sql,(n,))
         return cur.fetchall()
     except Exception as e:
-        print(e)
-        print("Error while writing image to database")
+        #print(e)
+        #print("Error while writing image to database")
         return -1
 
     conn.commit()

@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.options import Options
 import requests
 import datetime
 import time
+import robotexclusionrulesparser
+import socket
 from bs4 import BeautifulSoup
 import urllib.robotparser
 from urllib.parse import urlparse
@@ -17,7 +19,18 @@ from urllib.parse import urlparse
 
 
 def get_sitemap(robots_content):
-    sitemap_url = None
+    sitemap_content = ""
+    robots.parse(robots_content)
+    sitemaps = robots.sitemaps
+    for sitemap in sitemaps:
+        try:
+            sitemap_content += requests.get(sitemap, timeout=10).text
+        except requests.exceptions.Timeout as e:
+            print(e)
+    if sitemap_content == "":
+        sitemap_content = None
+    return sitemap_content
+    '''sitemap_url = None
     sitemap = None
     for line in robots_content.split("\n"):
         if line.lower().startswith("sitemap"):
@@ -25,11 +38,16 @@ def get_sitemap(robots_content):
             break
     if sitemap_url is not None:
         sitemap = requests.get(sitemap_url).text
-    return sitemap
+    return sitemap'''
 
-#chech first page in crawldb.page which is FRONTIER
+
+# Log file
 file = open("log.txt", "w")
+# Robots parser
+robots = robotexclusionrulesparser.RobotExclusionRulesParser()
+# Get link from frontier
 frontier = database.getN_frontiers(1)
+# Timer
 start = time.time()
 while frontier != -1:
     page = Page(*(frontier[0]))
@@ -38,26 +56,21 @@ while frontier != -1:
     # 1. Check domain robots and sitemap
     if page.robots_content is None:
         # TIMEOUT 10s. TODO: Max size. Timeout še drugje?
-        # DODAN PAGE TYPE CODE "TIMEOUT"
         try:
             page.robots_content = requests.get("http://" + page.domain + "/robots.txt", timeout=10).text #Tukj predpostavlam da te avtomatsko na https da če ni http
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            # Poskusi še z www.url
-            #try:
-            #    page.robots_content = requests.get("http://www." + page.domain + "/robots.txt", timeout=10).text
-            #    page.url = "www."+page.url
-            #except:
             database.update_page("TIMEOUT", None, None, None, page.url)
             frontier = database.getN_frontiers(1)
             end = time.time()
             print(end - start)
             continue
+
+
         page.sitemap_content = get_sitemap(page.robots_content)
         #writing sitemap, robots and domain to site
         database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
 
     # 2. Read page, write html, status code and accessed time
-    # TODO: Kako je z redirecti? A lahko slediš in na koncu zapišeš končen status code, ohranjaš pa originalen link?
     response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
     page.http_status_code = response.status_code
     page.accessed_time = datetime.datetime.now()
@@ -66,7 +79,7 @@ while frontier != -1:
     # HTML
     if "text/html" in page.content_type:
         page.page_type_code = "HTML"
-        # Branje s Selenium
+        # Selenium driver
         options = Options()
         options.add_argument("--headless")
         driver = webdriver.Chrome('./chromedriver.exe', options=options)
