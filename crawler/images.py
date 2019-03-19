@@ -11,15 +11,23 @@ import datetime
 
 def get_images(driver):
     images = driver.find_elements_by_tag_name("img")
-    filename = []
-    content_type = []
-    data = []
-    accessed_time =[]
+    data_all = []
+    filename = ""
+    data = ""
+    content_type = ""
+    accessed_time = ""
 
     for image in images:
-        filename.append(image.get_attribute('src'))
-        data.append(requests.get(image.get_attribute('src')).content)
-        accessed_time.append(datetime.datetime.now())
-        content_type.append(image.get_attribute('src').split(".")[-1])
-        
-    return [filename, content_type, data, accessed_time]
+
+        filename = (image.get_attribute('src'))
+        if(image.get_attribute('src').startswith( 'data')):
+            data = (image.get_attribute('src').split(",")[1])
+            content_type = ("ERROR");
+        else:
+            data = requests.get(image.get_attribute('src')).content
+            content_type = (image.get_attribute('src').split(".")[-1])
+
+        accessed_time = (datetime.datetime.now())
+        data_all.append([filename, content_type, data, accessed_time])
+
+    return data_all

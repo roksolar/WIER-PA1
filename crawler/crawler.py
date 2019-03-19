@@ -91,7 +91,7 @@ while frontier != -1:
         page.redirected_to = driver.current_url
         # 3. Get links, write new pages & sites.
         database.write_url_to_database(links.get_links(page, driver), page.page_id)
-        database.write_image_to_database(driver)
+        database.write_image_to_database(page.url, driver)
         #update page
         database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
         driver.close()

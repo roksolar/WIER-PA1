@@ -102,23 +102,22 @@ def write_page_data(page_id,data_type_code,data):
     conn.commit()
     cur.close()
 
-def write_image_to_database(url):
+def write_image_to_database(url, driver):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     cur = conn.cursor()
 
     #get all images from url
-    image_data = images.get_images(url)
-
+    image_data = images.get_images(driver)
     #insert all images to database
     for image in image_data:
-        sql = 'INSERT INTO crawldb.image (page_id, filename) ' \
-              'VALUES ((SELECT id from crawldb.page WHERE url=%s), %s)'
+        sql = 'INSERT INTO crawldb.image (page_id, filename,content_type,data,accessed_time) ' \
+              'VALUES ((SELECT id from crawldb.page WHERE url=%s), %s, %s, %s , %s )'
         try:
             #print(sql, (image,url,))
-            cur.execute(sql, (url,image,))
+            cur.execute(sql, (url, image[0], image[1], image[2], image[3], ))
         except Exception as e:
             conn.rollback()
-            #print(e)
+            print(e)
             #print("Error while writing image to database")
     conn.commit()
     cur.close()
