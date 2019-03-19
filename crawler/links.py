@@ -81,7 +81,6 @@ def get_links(page, driver):
 
     links = parse_links(urls, links, robots)
 
-    driver.close()
     #print(len(links))
     # Beautiful soup pridobivanje linkov. Ne doda predpone relativnim linkom
     # soup = BeautifulSoup(driver.page_source, 'html.parser')

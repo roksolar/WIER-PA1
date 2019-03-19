@@ -49,10 +49,12 @@ robots = robotexclusionrulesparser.RobotExclusionRulesParser()
 frontier = database.getN_frontiers(1)
 # Timer
 start = time.time()
+
 while frontier != -1:
     page = Page(*(frontier[0]))
     file.write(page.url + "\n")
     print(page)
+    time.sleep(4)
     # 1. Check domain robots and sitemap
     if page.robots_content is None:
         # TIMEOUT 10s. TODO: Max size. Timeout še drugje?
@@ -89,9 +91,10 @@ while frontier != -1:
         page.redirected_to = driver.current_url
         # 3. Get links, write new pages & sites.
         database.write_url_to_database(links.get_links(page, driver), page.page_id)
-
+        database.write_image_to_database(driver)
         #update page
         database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
+        driver.close()
 
     # OTHER CONTENT TYPE
     else:
