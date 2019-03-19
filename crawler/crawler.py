@@ -73,7 +73,14 @@ while frontier != -1:
         database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
 
     # 2. Read page, write html, status code and accessed time
-    response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
+    try:
+        response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+        database.update_page("TIMEOUT", None, None, None, page.url)
+        frontier = database.getN_frontiers(1)
+        end = time.time()
+        print(end - start)
+        continue
     page.http_status_code = response.status_code
     page.accessed_time = datetime.datetime.now()
     page.content_type = response.headers['content-type']
