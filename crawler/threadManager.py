@@ -18,27 +18,24 @@ from urllib.parse import urlparse
 
 #url1 = "http://www.upravneenote.gov.si"
 
-max_workers = 10
-# Log file
-file = open("log.txt", "w")
+max_workers = 16
 # Get link from frontier
-frontier = database.getN_frontiers(10)
+frontier = database.getN_frontiers(16)
 # Timer
 start = time.time()
 
 while frontier != -1:
     i = 0
     for ele in frontier:
-        if i>=10:
+        if i>=16:
             break
         page = Page(*ele)
-        w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), file, start,))
+        w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), start,))
         w.start()
         i = i + 1
     w.join()
-    frontier = database.getN_frontiers(10)
+    frontier = database.getN_frontiers(16)
     end = time.time()
-    print("Thread loop finished: "+str(end-start))
+    #print("Thread loop finished: "+str(end-start))
 
 
-file.close()
