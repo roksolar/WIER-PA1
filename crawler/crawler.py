@@ -1,5 +1,3 @@
-import os
-import images
 import links
 import database
 from page import Page
@@ -9,13 +7,9 @@ import requests
 import datetime
 import time
 import robotexclusionrulesparser
-import socket
-from bs4 import BeautifulSoup
-import urllib.robotparser
-from urllib.parse import urlparse
 
-#url1 = "http://www.upravneenote.gov.si"
-
+# Robots parser
+robots = robotexclusionrulesparser.RobotExclusionRulesParser()
 
 
 def get_sitemap(robots_content):
@@ -41,17 +35,8 @@ def get_sitemap(robots_content):
     return sitemap'''
 
 
-# Log file
-file = open("log.txt", "w")
-# Robots parser
-robots = robotexclusionrulesparser.RobotExclusionRulesParser()
-# Get link from frontier
-frontier = database.getN_frontiers(1)
-# Timer
-start = time.time()
-
-while frontier != -1:
-    page = Page(*(frontier[0]))
+def crawl_webpage(page, thread_name, file, start):
+    print(thread_name+" has started")
     file.write(page.url + "\n")
     print(page)
     time.sleep(4)
@@ -62,10 +47,9 @@ while frontier != -1:
             page.robots_content = requests.get("http://" + page.domain + "/robots.txt", timeout=10).text #Tukj predpostavlam da te avtomatsko na https da če ni http
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             database.update_page("TIMEOUT", None, None, None, page.url)
-            frontier = database.getN_frontiers(1)
             end = time.time()
             print(end - start)
-            continue
+            return
 
 
         page.sitemap_content = get_sitemap(page.robots_content)
@@ -77,10 +61,9 @@ while frontier != -1:
         response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         database.update_page("TIMEOUT", None, None, None, page.url)
-        frontier = database.getN_frontiers(1)
         end = time.time()
         print(end - start)
-        continue
+        return
     page.http_status_code = response.status_code
     page.accessed_time = datetime.datetime.now()
     page.content_type = response.headers['content-type']
@@ -130,17 +113,8 @@ while frontier != -1:
 
         database.write_page_data(page.page_id, page.data_type, page.binary_data)
         database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
-    frontier = database.getN_frontiers(1)
     end = time.time()
-    print(end-start)
+    print(end - start)
+    print(thread_name + " has finished")
 
 
-file.close()
-#url1 = "http://www.mizs.gov.si/"
-#links = links.get_links(url1)
-#database.write_url_to_database(links)
-
-#from frontier... from current link get images
-#database.write_image_to_database(url1)
-
-#images.get_images(url1)
