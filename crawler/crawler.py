@@ -41,7 +41,6 @@ def crawl_webpage(page, thread_name, start):
     #print(thread_name+" has started")
     #print(page)
     try:
-        time.sleep(4)
         # 1. Check domain robots and sitemap
         if page.robots_content is None:
             # TIMEOUT 10s. TODO: Max size. Timeout še drugje?
