@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 import requests
 import datetime
 import time
+import urllib.robotparser
 import robotexclusionrulesparser
 
 # Robots parser
@@ -56,6 +57,14 @@ def crawl_webpage(page, thread_name, start):
             page.sitemap_content = get_sitemap(page.robots_content)
             #writing sitemap, robots and domain to site
             database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
+
+        if page.robots_content is None:
+            time.sleep(4)
+        else:
+            parser = urllib.robotparser.RobotFileParser(url="http://" + page.domain + "/robots.txt", )
+            parser.read()
+            delay = parser.crawl_delay("*")
+            time.sleep(delay)
 
         # 2. Read page, write html, status code and accessed time
         try:
