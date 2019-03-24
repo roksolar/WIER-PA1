@@ -63,6 +63,8 @@ def crawl_webpage(page, thread_name, start):
             parser = urllib.robotparser.RobotFileParser(url="http://" + page.domain + "/robots.txt", )
             parser.read()
             delay = parser.crawl_delay("*")
+            if(delay==None)
+                time.sleep(4)
             time.sleep(delay)
 
         # 2. Read page, write html, status code and accessed time
