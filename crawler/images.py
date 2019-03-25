@@ -20,14 +20,16 @@ def get_images(driver):
     for image in images:
 
         filename = (image.get_attribute('src'))
-        if(image.get_attribute('src').startswith( 'data')):
-            data = (image.get_attribute('src').split(",")[1])
-            content_type = ("ERROR");
-        else:
-            data = requests.get(image.get_attribute('src')).content
-            content_type = (image.get_attribute('src').split(".")[-1])
+        if image.get_attribute('src') is not None:
 
-        accessed_time = (datetime.datetime.now())
-        data_all.append([filename, content_type, data, accessed_time])
+            if(image.get_attribute('src').startswith( 'data')):
+                data = (image.get_attribute('src').split(",")[1])
+                content_type = ("ERROR");
+            else:
+                data = requests.get(image.get_attribute('src')).content
+                content_type = (image.get_attribute('src').split(".")[-1])
+
+            accessed_time = (datetime.datetime.now())
+            data_all.append([filename, content_type, data, accessed_time])
 
     return data_all
