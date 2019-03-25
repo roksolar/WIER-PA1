@@ -1,17 +1,12 @@
-import re
-import urllib.robotparser
 import urlcanon
-import socket
-from urllib.parse import urlparse, urljoin, urlsplit
-import requests
+from urllib.parse import urlparse
 import regex as regex
 import selenium
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from urllib.parse import urldefrag
 import robotexclusionrulesparser
 
+robots = robotexclusionrulesparser.RobotExclusionRulesParser()
 
 def get_links(page, driver):
     #url1 = "http://localhost:8080/"
@@ -21,26 +16,7 @@ def get_links(page, driver):
     links = []
     # Parsing ROBOTS.TXT
     if page.robots_content is not None:
-        robots = robotexclusionrulesparser.RobotExclusionRulesParser()
         robots.parse(page.robots_content)
-
-    #
-    '''url1 = page.redirected_to
-    robots_url = urlparse(url1).scheme + "://" + urlparse(url1).netloc + "/robots.txt"
-    rp = urllib.robotparser.RobotFileParser()
-    rp.set_url(robots_url)
-    rp.read()
-    '''
-    #rrate = rp.request_rate("*")
-
-    # http://fortheloveofseo.com/blog/seo-basics/tutorial-robots-txt-your-guide-for-the-search-engines/
-    # Request-rate = Koliko strani na koliko sekund lahko obiščeš
-    #if rrate is not None:
-    #    print(str(rrate.requests) + " request per " + str(rrate.seconds) + " seconds")
-    #cdelay = rp.crawl_delay("*")
-    # Crawl-delay = Koliko časa moraš počakat med requesti
-    #if cdelay is not None:
-    #    print("Crawl delay: " + str(cdelay))
 
     #Sitemap
     links = parse_links(parse_sitemap(page.sitemap_content), links, robots)
@@ -80,12 +56,6 @@ def get_links(page, driver):
 
     links = parse_links(urls, links, robots)
 
-    #print(len(links))
-    # Beautiful soup pridobivanje linkov. Ne doda predpone relativnim linkom
-    # soup = BeautifulSoup(driver.page_source, 'html.parser')
-    # for link in soup.findAll('a'):
-    #             tet_2 = link.get('href')
-    #             print(tet_2)
     return links
 
 def parse_links(potential_links, links, robots):
@@ -104,9 +74,9 @@ def parse_links(potential_links, links, robots):
 
         # Base URL
         baseURL = str(urlparse(parsed_url).netloc)
-        # Add www. to base URL
-        if baseURL.startswith("www."):
-            baseURL = baseURL[4:]
+        # Remove www. to base URL
+        #if baseURL.startswith("www."):
+        #    baseURL = baseURL[4:]
 
         # Remove trailing slash. To ne vem če je prov
         if parsed_url.endswith('/'):
@@ -123,8 +93,8 @@ def parse_links(potential_links, links, robots):
         # Remove https://
         if parsed_url.startswith('https://'):
             parsed_url = parsed_url[8:]
-        if parsed_url.startswith('www.'):
-            parsed_url = parsed_url[4:]
+        #if parsed_url.startswith('www.'):
+        #    parsed_url = parsed_url[4:]
         #print("navaden       " + potential_link)
         #print("canon         " + parsed_url)
 

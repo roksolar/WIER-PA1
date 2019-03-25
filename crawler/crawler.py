@@ -10,7 +10,6 @@ import urllib.robotparser
 import robotexclusionrulesparser
 import psycopg2
 
-# Robots parser
 robots = robotexclusionrulesparser.RobotExclusionRulesParser()
 
 
@@ -19,6 +18,7 @@ def get_sitemap(robots_content):
     robots.parse(robots_content)
     sitemaps = robots.sitemaps
     for sitemap in sitemaps:
+        # Če bo timeout na sitemap dovoli nadaljevanje
         try:
             sitemap_content += requests.get(sitemap, timeout=10).text
         except requests.exceptions.Timeout as e:
@@ -28,6 +28,7 @@ def get_sitemap(robots_content):
     return sitemap_content
 
 def get_10mb(url):
+    # Če bo timeout na content bo status Timeout (Exception)
     r = requests.get(url, stream=True, timeout=10)
     data = None
     size = 0
@@ -39,28 +40,25 @@ def get_10mb(url):
         else:
             data += chunk
         if size > max_size:
+            r.close()
             return data
+    r.close()
+    return data
 
 def crawl_webpage(page, thread_name, start):
+    # Robots parser
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
-    #print(thread_name+" has started")
-    #print(page)
     try:
         # 1. Check domain robots and sitemap
         if page.robots_content is None:
             # TIMEOUT 10s.
-            try:
-                page.robots_content = requests.get("http://" + page.domain + "/robots.txt", timeout=10).text #Tukj predpostavlam da te avtomatsko na https da če ni http
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                database.update_page(conn, "TIMEOUT", None, None, None, page.url)
-                end = time.time()
-                #print(end - start)
-                return
-
-
-            page.sitemap_content = get_sitemap(page.robots_content)
-            #writing sitemap, robots and domain to site
-            database.write_site_to_database(conn, page.robots_content,page.sitemap_content,page.domain)
+            # Če bo timeout na robots potem je timeout na page. Exception
+            r = requests.get("http://" + page.domain + "/robots.txt", timeout=10)
+            if r.status_code == 200:
+                page.robots_content = r.text
+                page.sitemap_content = get_sitemap(page.robots_content)
+                #writing sitemap, robots and domain to site
+                database.write_site_to_database(conn, page.robots_content,page.sitemap_content,page.domain)
 
         if page.robots_content is None:
             time.sleep(4)
@@ -70,14 +68,11 @@ def crawl_webpage(page, thread_name, start):
             delay = parser.crawl_delay("*")
             time.sleep(delay)
 
+            #print(e)
+
         # 2. Read page, write html, status code and accessed time
-        try:
-            response = requests.head("http://" + page.url, allow_redirects=True, timeout=10)# timeout=self.pageOpenTimeout, headers=customHeaders)
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            database.update_page(conn, "TIMEOUT", None, None, None, page.url)
-            end = time.time()
-            #print(end - start)
-            return
+        # Če bo timeout na head bo najbrž tudi na content. Exception
+        response = requests.head("http://" + page.url, allow_redirects=True, timeout=10)
         page.http_status_code = response.status_code
         page.accessed_time = datetime.datetime.now()
         page.content_type = response.headers['content-type']
@@ -130,16 +125,14 @@ def crawl_webpage(page, thread_name, start):
 
             database.write_page_data(conn, page.page_id, page.data_type, page.binary_data)
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
-        end = time.time()
-        #print(end - start)
         #print(thread_name + " has finished")
         conn.close()
     except Exception as e:
+        # Opaženi: requests.exceptions.ConnectTimeout, requests.exceptions.SSLError, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError)
+        #timeout error na content, ssl error, timeout error na handshake, connection error
         database.update_page(conn, "TIMEOUT", None, None, None, page.url)
-        end = time.time()
         print(page)
         print(e)
-        #print(end - start)
         conn.close()
         return
 
