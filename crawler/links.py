@@ -20,7 +20,6 @@ def get_links(page, driver):
     #url1 = "https://ucilnica.fri.uni-lj.si"
     links = []
     # Parsing ROBOTS.TXT
-    # TODO: kaj se zgodi če je NONE?
     if page.robots_content is not None:
         robots = robotexclusionrulesparser.RobotExclusionRulesParser()
         robots.parse(page.robots_content)

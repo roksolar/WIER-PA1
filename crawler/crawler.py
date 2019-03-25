@@ -26,17 +26,20 @@ def get_sitemap(robots_content):
     if sitemap_content == "":
         sitemap_content = None
     return sitemap_content
-    '''sitemap_url = None
-    sitemap = None
-    for line in robots_content.split("\n"):
-        if line.lower().startswith("sitemap"):
-            sitemap_url = line.replace("sitemap:", "").replace("Sitemap:", "")
-            break
-    if sitemap_url is not None:
-        sitemap = requests.get(sitemap_url).text
-    return sitemap'''
 
-
+def get_10mb(url):
+    r = requests.get(url, stream=True, timeout=10)
+    data = None
+    size = 0
+    max_size = 10000000
+    for chunk in r.iter_content(1024):
+        size += len(chunk)
+        if data is None:
+            data = chunk
+        else:
+            data += chunk
+        if size > max_size:
+            return data
 
 def crawl_webpage(page, thread_name, start):
     conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
@@ -45,7 +48,7 @@ def crawl_webpage(page, thread_name, start):
     try:
         # 1. Check domain robots and sitemap
         if page.robots_content is None:
-            # TIMEOUT 10s. TODO: Max size. Timeout še drugje?
+            # TIMEOUT 10s.
             try:
                 page.robots_content = requests.get("http://" + page.domain + "/robots.txt", timeout=10).text #Tukj predpostavlam da te avtomatsko na https da če ni http
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
@@ -69,7 +72,7 @@ def crawl_webpage(page, thread_name, start):
 
         # 2. Read page, write html, status code and accessed time
         try:
-            response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
+            response = requests.head("http://" + page.url, allow_redirects=True, timeout=10)# timeout=self.pageOpenTimeout, headers=customHeaders)
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             database.update_page(conn, "TIMEOUT", None, None, None, page.url)
             end = time.time()
@@ -106,23 +109,23 @@ def crawl_webpage(page, thread_name, start):
             page.html_content = None
             # PDF
             if "application/pdf" in page.content_type:
-                page.binary_data = requests.get("http://" + page.url).content #Ne vem če je to to kar je treba shrant
+                page.binary_data = get_10mb("http://" + page.url)
                 page.data_type = "PDF"
             # DOC
             elif "application/msword" in page.content_type:
-                page.binary_data = requests.get("http://" + page.url).content
+                page.binary_data = get_10mb("http://" + page.url)
                 page.data_type = "DOC"
             # DOCX
             elif "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in page.content_type:
-                page.binary_data = requests.get("http://" + page.url).content
+                page.binary_data = get_10mb("http://" + page.url)
                 page.data_type = "DOCX"
             # PPT
             elif "application/vnd.ms-powerpoint" in page.content_type:
-                page.binary_data = requests.get("http://" + page.url).content
+                page.binary_data = get_10mb("http://" + page.url)
                 page.data_type = "PPT"
             # PPTX
             elif "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-                page.binary_data = requests.get("http://" + page.url).content
+                page.binary_data = get_10mb("http://" + page.url)
                 page.data_type = "PPTX"
 
             database.write_page_data(conn, page.page_id, page.data_type, page.binary_data)
