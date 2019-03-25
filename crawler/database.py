@@ -1,9 +1,7 @@
 import psycopg2
 import images
 
-def write_url_to_database(links,page_index):
-    #connect to database
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def write_url_to_database(conn,links,page_index):
     cur = conn.cursor()
     for link in links:
         #print(link)
@@ -54,8 +52,7 @@ def write_url_to_database(links,page_index):
     conn.commit()
     cur.close()
 
-def update_page(page_type,html,http_status,accessed,url):
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def update_page(conn,page_type,html,http_status,accessed,url):
     cur = conn.cursor()
     try:
         sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s WHERE url=%s"
@@ -70,9 +67,7 @@ def update_page(page_type,html,http_status,accessed,url):
 
 
 
-def write_site_to_database(robots,sitemap,domain):
-    #connect to database
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def write_site_to_database(conn,robots,sitemap,domain):
     cur = conn.cursor()
     try:
         sql = "UPDATE crawldb.site SET robots_content = %s,sitemap_content=%s WHERE domain=%s"
@@ -85,9 +80,7 @@ def write_site_to_database(robots,sitemap,domain):
     conn.commit()
     cur.close()
 
-def write_page_data(page_id,data_type_code,data):
-
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def write_page_data(conn,page_id,data_type_code,data):
     cur = conn.cursor()
 
     sql = 'INSERT INTO crawldb.page_data (page_id, data_type_code,data) ' \
@@ -102,8 +95,7 @@ def write_page_data(page_id,data_type_code,data):
     conn.commit()
     cur.close()
 
-def write_image_to_database(url, driver):
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def write_image_to_database(conn,url, driver):
     cur = conn.cursor()
 
     #get all images from url
@@ -123,8 +115,7 @@ def write_image_to_database(url, driver):
     cur.close()
 
 
-def getN_frontiers(n):
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+def getN_frontiers(conn, n):
     cur = conn.cursor()
     sql = '''SELECT page.id, page.site_id, page.page_type_code, page.url, page.html_content, page.http_status_code
 , page.accessed_time, site.domain, site.robots_content, site.sitemap_content FROM crawldb.page page

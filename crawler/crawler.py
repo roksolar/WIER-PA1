@@ -8,6 +8,7 @@ import datetime
 import time
 import urllib.robotparser
 import robotexclusionrulesparser
+import psycopg2
 
 # Robots parser
 robots = robotexclusionrulesparser.RobotExclusionRulesParser()
@@ -38,6 +39,7 @@ def get_sitemap(robots_content):
 
 
 def crawl_webpage(page, thread_name, start):
+    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     #print(thread_name+" has started")
     #print(page)
     try:
@@ -47,7 +49,7 @@ def crawl_webpage(page, thread_name, start):
             try:
                 page.robots_content = requests.get("http://" + page.domain + "/robots.txt", timeout=10).text #Tukj predpostavlam da te avtomatsko na https da če ni http
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                database.update_page("TIMEOUT", None, None, None, page.url)
+                database.update_page(conn, "TIMEOUT", None, None, None, page.url)
                 end = time.time()
                 #print(end - start)
                 return
@@ -55,7 +57,7 @@ def crawl_webpage(page, thread_name, start):
 
             page.sitemap_content = get_sitemap(page.robots_content)
             #writing sitemap, robots and domain to site
-            database.write_site_to_database(page.robots_content,page.sitemap_content,page.domain)
+            database.write_site_to_database(conn, page.robots_content,page.sitemap_content,page.domain)
 
         if page.robots_content is None:
             time.sleep(4)
@@ -69,7 +71,7 @@ def crawl_webpage(page, thread_name, start):
         try:
             response = requests.head("http://" + page.url, allow_redirects=True)# timeout=self.pageOpenTimeout, headers=customHeaders)
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            database.update_page("TIMEOUT", None, None, None, page.url)
+            database.update_page(conn, "TIMEOUT", None, None, None, page.url)
             end = time.time()
             #print(end - start)
             return
@@ -89,13 +91,13 @@ def crawl_webpage(page, thread_name, start):
             # Da dobiš robots iz strani, na katero si se rederictu
             page.redirected_to = driver.current_url
             # 3. Get links, write new pages & sites.
-            database.write_url_to_database(links.get_links(page, driver), page.page_id)
+            database.write_url_to_database(conn, links.get_links(page, driver), page.page_id)
             try:
-                database.write_image_to_database(page.url, driver)
+                database.write_image_to_database(conn, page.url, driver)
             except Exception as e:
                 print(e)
             #update page
-            database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
+            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
             driver.close()
 
         # OTHER CONTENT TYPE
@@ -123,17 +125,19 @@ def crawl_webpage(page, thread_name, start):
                 page.binary_data = requests.get("http://" + page.url).content
                 page.data_type = "PPTX"
 
-            database.write_page_data(page.page_id, page.data_type, page.binary_data)
-            database.update_page(page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
+            database.write_page_data(conn, page.page_id, page.data_type, page.binary_data)
+            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
         end = time.time()
         #print(end - start)
         #print(thread_name + " has finished")
+        conn.close()
     except Exception as e:
-        database.update_page("TIMEOUT", None, None, None, page.url)
+        database.update_page(conn, "TIMEOUT", None, None, None, page.url)
         end = time.time()
         print(page)
         print(e)
         #print(end - start)
+        conn.close()
         return
 
 
