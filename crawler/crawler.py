@@ -63,10 +63,11 @@ def crawl_webpage(page, thread_name, start):
         if page.robots_content is None:
             time.sleep(4)
         else:
-            parser = urllib.robotparser.RobotFileParser(url="http://" + page.domain + "/robots.txt", )
-            parser.read()
-            delay = parser.crawl_delay("*")
-            time.sleep(delay)
+            delay = robots.get_crawl_delay("*")
+            if delay == None:
+                time.sleep(4)
+            else:
+                time.sleep(delay)
 
             #print(e)
 
