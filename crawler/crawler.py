@@ -79,6 +79,7 @@ def crawl_webpage(page, thread_name, start):
             page.accessed_time = datetime.datetime.now()
             page.content_type = response.headers['content-type']
         except Exception as e:
+            print(thread_name)
             print(page)
             print("Head request error. Trying with get...")
             print(e)
@@ -103,6 +104,7 @@ def crawl_webpage(page, thread_name, start):
             try:
                 database.write_image_to_database(conn, page.url, driver)
             except Exception as e:
+                print(thread_name)
                 print(page)
                 print("slike")
                 print(e)
@@ -157,6 +159,7 @@ def crawl_webpage(page, thread_name, start):
             driver.quit()
         except Exception as x:
             pass
+        print(thread_name)
         print(page)
         print(e)
         conn.close()
