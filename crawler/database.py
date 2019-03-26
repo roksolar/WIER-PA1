@@ -133,3 +133,16 @@ def getN_frontiers(conn, n):
 
     conn.commit()
     cur.close()
+
+
+def check_duplicates(conn, html):
+    cur = conn.cursor()
+    sql = 'SELECT id FROM crawldb.page WHERE  html_content = %s'
+    try:
+        cur.execute(sql, (html, ))
+        return cur.fetchall()
+    except Exception as e:
+        return -1
+
+    conn.commit()
+    cur.close()

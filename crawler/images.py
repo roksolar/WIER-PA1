@@ -13,7 +13,6 @@ def get_images(driver):
     for image in images:
 
         filename = (image.get_attribute('src'))
-        print(filename)
         if filename is not None:
             if filename[:4] == "data":
                 continue

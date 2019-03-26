@@ -100,12 +100,20 @@ def crawl_webpage(page, thread_name, start):
             page.redirected_to = driver.current_url
             # 3. Get links, write new pages & sites.
             database.write_url_to_database(conn, links.get_links(page, driver), page.page_id)
-            ##try:
-            database.write_image_to_database(conn, page.url, driver)
-            #except Exception as e:
-                #print(page)
-                #print("slike")
-                #print(e)
+            try:
+                database.write_image_to_database(conn, page.url, driver)
+            except Exception as e:
+                print(page)
+                print("slike")
+                print(e)
+
+            #check for duplicates
+            if page.http_status_code == 200:
+                duplicate = database.check_duplicates(conn, page.html_content)
+                print(duplicate)
+                if len(duplicate) > 0:
+                    page.page_type_code = "DUPLICATE"
+
             #update page
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
             driver.quit()
