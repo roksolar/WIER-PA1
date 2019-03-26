@@ -6,7 +6,6 @@ from selenium.webdriver.chrome.options import Options
 import requests
 import datetime
 import time
-import urllib.robotparser
 import robotexclusionrulesparser
 import psycopg2
 
@@ -73,10 +72,20 @@ def crawl_webpage(page, thread_name, start):
 
         # 2. Read page, write html, status code and accessed time
         # Če bo timeout na head bo najbrž tudi na content. Exception
-        response = requests.head("http://" + page.url, allow_redirects=True, timeout=10)
-        page.http_status_code = response.status_code
-        page.accessed_time = datetime.datetime.now()
-        page.content_type = response.headers['content-type']
+        try:
+            # Če ne dovoli head request, poskusi še z get
+            response = requests.head("http://" + page.url, allow_redirects=True, timeout=10)
+            page.http_status_code = response.status_code
+            page.accessed_time = datetime.datetime.now()
+            page.content_type = response.headers['content-type']
+        except Exception as e:
+            print(page)
+            print("Head request error. Trying with get...")
+            print(e)
+            response = requests.get("http://" + page.url, allow_redirects=True, timeout=10)
+            page.http_status_code = response.status_code
+            page.accessed_time = datetime.datetime.now()
+            page.content_type = response.headers['content-type']
 
         # HTML
         if "text/html" in page.content_type:
@@ -94,10 +103,13 @@ def crawl_webpage(page, thread_name, start):
             try:
                 database.write_image_to_database(conn, page.url, driver)
             except Exception as e:
+                print(page)
+                print("slike")
                 print(e)
             #update page
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
-            driver.close()
+            driver.quit()
+            #driver.close()
 
         # OTHER CONTENT TYPE
         else:
@@ -132,9 +144,13 @@ def crawl_webpage(page, thread_name, start):
         # Opaženi: requests.exceptions.ConnectTimeout, requests.exceptions.SSLError, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError)
         #timeout error na content, ssl error, timeout error na handshake, connection error
         database.update_page(conn, "TIMEOUT", None, None, None, page.url)
+        try:
+            #driver.close()
+            driver.quit()
+        except Exception as x:
+            pass
         print(page)
         print(e)
         conn.close()
         return
-
 

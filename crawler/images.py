@@ -1,13 +1,6 @@
-import os
-import images
-import links
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import requests
-from bs4 import BeautifulSoup
-import urllib.robotparser
-from urllib.parse import urlparse
 import datetime
+import imghdr
 
 def get_images(driver):
     images = driver.find_elements_by_tag_name("img")
@@ -23,11 +16,14 @@ def get_images(driver):
         if image.get_attribute('src') is not None:
 
             if(image.get_attribute('src').startswith( 'data')):
-                data = (image.get_attribute('src').split(",")[1])
-                content_type = ("ERROR");
+                #data = (image.get_attribute('src').split(",")[1])
+                #print(image.get_attribute('src').split(",")[1])
+                print(imghdr.what("a", data))
+                content_type = ("ERROR")
             else:
+
                 data = requests.get(image.get_attribute('src')).content
-                content_type = (image.get_attribute('src').split(".")[-1])
+                content_type = imghdr.what("a",data)
 
             accessed_time = (datetime.datetime.now())
             data_all.append([filename, content_type, data, accessed_time])
