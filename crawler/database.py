@@ -1,5 +1,15 @@
 import psycopg2
 import images
+import hashlib
+
+
+hash_set = set()
+
+def get_hash_to_set(conn):
+    print("Started hashing existing pages")
+    html_content = get_hash(conn)
+    for element in html_content:
+        hash_set.add(hashlib.md5((element[0]).encode()).hexdigest())
 
 def write_url_to_database(conn,links,page_index):
     cur = conn.cursor()
@@ -135,11 +145,11 @@ def getN_frontiers(conn, n):
     cur.close()
 
 
-def check_duplicates(conn, html):
+def get_hash(conn):
     cur = conn.cursor()
-    sql = 'SELECT id FROM crawldb.page WHERE  html_content = %s'
+    sql = "SELECT html_content FROM crawldb.page WHERE http_status_code = '200' and page_type_code = 'HTML'"
     try:
-        cur.execute(sql, (html, ))
+        cur.execute(sql)
         return cur.fetchall()
     except Exception as e:
         return -1

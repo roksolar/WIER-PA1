@@ -1,6 +1,5 @@
 import links
 import database
-from page import Page
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
@@ -8,6 +7,8 @@ import datetime
 import time
 import robotexclusionrulesparser
 import psycopg2
+import hashlib
+
 
 robots = robotexclusionrulesparser.RobotExclusionRulesParser()
 
@@ -109,12 +110,15 @@ def crawl_webpage(page, thread_name, start):
                 print("slike")
                 print(e)
 
-            #check for duplicates
-            if page.http_status_code == 200:
-                duplicate = database.check_duplicates(conn, page.html_content)
-                print(duplicate)
-                if len(duplicate) > 0:
-                    page.page_type_code = "DUPLICATE"
+            # check for duplicates
+            start = time.time()
+            current_hash = hashlib.md5(page.html_content.encode()).hexdigest()
+            if current_hash in database.hash_set:
+                page.page_type_code = "DUPLICATE"
+            else:
+                database.hash_set.add(current_hash)
+            end = time.time()
+            print("Checking for duplicates took : " + str(end - start))
 
             #update page
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
