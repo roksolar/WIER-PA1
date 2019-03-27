@@ -11,7 +11,7 @@ import hashlib
 max_workers = 10
 # Get link from frontier
 connStart = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
-frontier = database.getN_frontiers(connStart, 10)
+frontier = database.getN_frontiers(connStart, max_workers)
 
 #get start hash
 start = time.time()
@@ -26,7 +26,7 @@ start = time.time()
 while frontier != -1:
     i = 0
     for ele in frontier:
-        if i>=10:
+        if i>=max_workers:
             break
         page = Page(*ele)
         w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), start,))
