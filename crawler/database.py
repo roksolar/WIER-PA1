@@ -67,6 +67,7 @@ def write_url_to_database(conn, links, page_index):
             #print("testasdas")
 
 def update_page(conn,page_type,html,http_status,accessed,url, hash):
+    #TODO: WHERE PAGE ID = ID
     cur = conn.cursor()
     try:
         sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s,html_content_hash = %s WHERE url=%s"

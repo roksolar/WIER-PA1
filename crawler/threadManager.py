@@ -12,7 +12,9 @@ max_workers = 15
 # Get link from frontier
 connStart = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
 frontier = database.getN_frontiers(connStart, max_workers)
-
+#for ele in frontier:
+#    print(ele[3])
+#print("-----------------")
 #for i in range(30):
 #    database.set_html_content_to_html_content_hash(connStart)
 
@@ -34,15 +36,21 @@ start = time.time()
 
 while frontier != -1:
     i = 0
+    threads = []
     for ele in frontier:
         if i>=max_workers:
             break
         page = Page(*ele)
         w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), start, connections[i],))
         w.start()
+        threads.append(w)
         i = i + 1
-    w.join()
+    for e in threads:
+        e.join()
     frontier = database.getN_frontiers(connStart, max_workers)
+    #for ele in frontier:
+    #    print(ele[3])
+    #print("-----------------")
     end = time.time()
     #print("Thread loop finished: "+str(end-start))
 

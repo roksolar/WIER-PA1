@@ -6,12 +6,9 @@ import requests
 import datetime
 import time
 import robotexclusionrulesparser
-import psycopg2
 import hashlib
 
-
 robots = robotexclusionrulesparser.RobotExclusionRulesParser()
-
 
 def get_sitemap(robots_content):
     sitemap_content = ""
@@ -63,8 +60,9 @@ def crawl_webpage(page, thread_name, start, conn):
         if page.robots_content is None:
             time.sleep(4)
         else:
+            robots.parse(page.robots_content)
             delay = robots.get_crawl_delay("*")
-            if delay == None:
+            if delay is None:
                 time.sleep(4)
             else:
                 time.sleep(delay)
@@ -122,7 +120,7 @@ def crawl_webpage(page, thread_name, start, conn):
             start = time.time()
             current_hash = hashlib.md5(page.html_content.encode()).hexdigest()
             if current_hash in database.hash_set:
-                print("duplicate")
+                #print("duplicate")
                 page.page_type_code = "DUPLICATE"
             else:
                 #print("NEW")
