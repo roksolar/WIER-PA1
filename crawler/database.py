@@ -139,7 +139,19 @@ def write_image_to_database(conn,url, driver):
 
 def getN_frontiers(conn, n):
     cur = conn.cursor()
-    sql = '''SELECT page.id, page.site_id, page.page_type_code, page.url, page.html_content, page.http_status_code
+    sql = '''SELECT t.id, t.site_id, t.page_type_code, t.url, t.html_content, t.http_status_code
+                    ,t.accessed_time,site.domain, site.robots_content, site.sitemap_content 
+                    FROM (
+                        SELECT DISTINCT ON (page.site_id) *
+                        FROM crawldb.page 
+                        where page.page_type_code='FRONTIER'
+                        ORDER BY page.site_id, page.id ASC
+                    ) t
+            JOIN crawldb.site site ON (t.site_id = site.id)
+            ORDER BY t.id ASC
+            limit %s'''
+
+    '''sql = SELECT page.id, page.site_id, page.page_type_code, page.url, page.html_content, page.http_status_code
 , page.accessed_time, site.domain, site.robots_content, site.sitemap_content FROM crawldb.page page
     JOIN crawldb.site site ON (page.site_id = site.id)
     WHERE page_type_code = 'FRONTIER'
