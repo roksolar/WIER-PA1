@@ -8,12 +8,13 @@ import hashlib
 
 #url1 = "http://www.upravneenote.gov.si"
 
-max_workers = 10
+max_workers = 15
 # Get link from frontier
 connStart = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
 frontier = database.getN_frontiers(connStart, max_workers)
 
-database.set_html_content_to_html_content_hash(connStart)
+#for i in range(30):
+#    database.set_html_content_to_html_content_hash(connStart)
 
 #get start hash
 start = time.time()
@@ -41,7 +42,7 @@ while frontier != -1:
         w.start()
         i = i + 1
     w.join()
-    frontier = database.getN_frontiers(connStart, 10)
+    frontier = database.getN_frontiers(connStart, max_workers)
     end = time.time()
     #print("Thread loop finished: "+str(end-start))
 

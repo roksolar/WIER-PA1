@@ -84,6 +84,14 @@ def crawl_webpage(page, thread_name, start, conn):
             print(page)
             print("Head request error. Trying with get...")
             print(e)
+            if page.robots_content is None:
+                time.sleep(4)
+            else:
+                delay = robots.get_crawl_delay("*")
+                if delay == None:
+                    time.sleep(4)
+                else:
+                    time.sleep(delay)
             response = requests.get("http://" + page.url, allow_redirects=True, timeout=10)
             page.http_status_code = response.status_code
             page.accessed_time = datetime.datetime.now()
@@ -114,12 +122,13 @@ def crawl_webpage(page, thread_name, start, conn):
             start = time.time()
             current_hash = hashlib.md5(page.html_content.encode()).hexdigest()
             if current_hash in database.hash_set:
+                print("duplicate")
                 page.page_type_code = "DUPLICATE"
             else:
-                print("NEW")
+                #print("NEW")
                 database.hash_set.add(current_hash)
             end = time.time()
-            print("Checking for duplicates took : " + str(end - start))
+            #print("Checking for duplicates took : " + str(end - start))
             #update page
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url, current_hash)
             driver.quit()
@@ -151,13 +160,13 @@ def crawl_webpage(page, thread_name, start, conn):
                 page.data_type = "PPTX"
 
             database.write_page_data(conn, page.page_id, page.data_type, page.binary_data)
-            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
+            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url,None)
         #print(thread_name + " has finished")
         #conn.close()
     except Exception as e:
         # Opaženi: requests.exceptions.ConnectTimeout, requests.exceptions.SSLError, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError)
         #timeout error na content, ssl error, timeout error na handshake, connection error
-        database.update_page(conn, "TIMEOUT", None, None, None, page.url)
+        database.update_page(conn, "TIMEOUT", None, None, None, page.url, None)
         try:
             #driver.close()
             driver.quit()
