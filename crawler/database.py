@@ -1,7 +1,7 @@
 import psycopg2
 import images
 import hashlib
-
+from sys import getsizeof
 
 hash_set = set()
 
@@ -9,9 +9,12 @@ def get_hash_to_set(conn):
     print("Started hashing existing pages")
     html_content = get_hash(conn)
     for element in html_content:
+        #print(getsizeof((element[0]).encode()))
+        #print(getsizeof(hashlib.md5((element[0]).encode()).hexdigest()))
         hash_set.add(hashlib.md5((element[0]).encode()).hexdigest())
 
-def write_url_to_database(conn,links,page_index):
+
+def write_url_to_database(conn, links, page_index):
     cur = conn.cursor()
     for link in links:
         #print(link)
@@ -24,6 +27,8 @@ def write_url_to_database(conn,links,page_index):
             conn.commit()
         except Exception as e:
             conn.rollback()
+            conn.commit()
+            cur.close()
             #print(e)
         #print(index)
         if index == -1:
@@ -40,6 +45,8 @@ def write_url_to_database(conn,links,page_index):
             except Exception as e:
                 conn.rollback()
                 #print(e)
+                conn.commit()
+                cur.close()
 
         #INSERT NEW PAGE WITH SITE_ID = INDEX
         try:
@@ -54,13 +61,15 @@ def write_url_to_database(conn,links,page_index):
 
             sql = 'INSERT INTO crawldb.link(from_page,to_page) VALUES (%s,%s)'
             cur.execute(sql, (page_index, index,))
+            conn.commit()
+            cur.close()
             #print(index)
         except Exception as e:
             conn.rollback()
+            conn.commit()
+            cur.close()
             #print(e)
             #print("testasdas")
-    conn.commit()
-    cur.close()
 
 def update_page(conn,page_type,html,http_status,accessed,url):
     cur = conn.cursor()
@@ -68,12 +77,12 @@ def update_page(conn,page_type,html,http_status,accessed,url):
         sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s WHERE url=%s"
         cur.execute(sql, (page_type, html, http_status, accessed, url,))
         conn.commit()
+        cur.close()
     except Exception as e:
         conn.rollback()
         #print(e)
-    conn.commit()
-    cur.close()
-
+        conn.commit()
+        cur.close()
 
 
 
@@ -83,12 +92,15 @@ def write_site_to_database(conn,robots,sitemap,domain):
         sql = "UPDATE crawldb.site SET robots_content = %s,sitemap_content=%s WHERE domain=%s"
         #print(sql)
         cur.execute(sql, (robots, sitemap, domain, ))
+        conn.commit()
+        cur.close()
     except Exception as e:
         conn.rollback()
+        conn.commit()
+        cur.close()
         #print(e)
         #print("Something is wrongt!")
-    conn.commit()
-    cur.close()
+
 
 def write_page_data(conn,page_id,data_type_code,data):
     cur = conn.cursor()
@@ -97,13 +109,16 @@ def write_page_data(conn,page_id,data_type_code,data):
           'VALUES (%s,%s,%s)'
     try:
         cur.execute(sql, (page_id, data_type_code,data,))
+        conn.commit()
+        cur.close()
     except Exception as e:
         conn.rollback()
+        conn.commit()
+        cur.close()
         #print(e)
         #print("Error while writing image to database")
 
-    conn.commit()
-    cur.close()
+
 
 def write_image_to_database(conn,url, driver):
     cur = conn.cursor()
@@ -117,13 +132,13 @@ def write_image_to_database(conn,url, driver):
         try:
             #print(sql, (image,url,))
             cur.execute(sql, (url, image[0], image[1], image[2], image[3], ))
+            conn.commit()
+            cur.close()
         except Exception as e:
             conn.rollback()
             print(e)
-            #print("Error while writing image to database")
-    conn.commit()
-    cur.close()
-
+            conn.commit()
+            cur.close()
 
 def getN_frontiers(conn, n):
     cur = conn.cursor()
@@ -134,25 +149,31 @@ def getN_frontiers(conn, n):
     ORDER BY page.id asc
     LIMIT %s'''
     try:
-        cur.execute(sql,(n,))
-        return cur.fetchall()
+        cur.execute(sql, (n,))
+        conn.commit()
+        a = cur.fetchall()
+        cur.close()
+        return a
     except Exception as e:
         #print(e)
         #print("Error while writing image to database")
+        conn.commit()
+        cur.close()
         return -1
-
-    conn.commit()
-    cur.close()
-
 
 def get_hash(conn):
     cur = conn.cursor()
     sql = "SELECT html_content FROM crawldb.page WHERE http_status_code = '200' and page_type_code = 'HTML'"
     try:
         cur.execute(sql)
-        return cur.fetchall()
+        conn.commit()
+        a = cur.fetchall()
+        cur.close()
+        return a
+
     except Exception as e:
+        conn.commit()
+        cur.close()
         return -1
 
-    conn.commit()
-    cur.close()
+
