@@ -45,9 +45,9 @@ def get_10mb(url):
     r.close()
     return data
 
-def crawl_webpage(page, thread_name, start):
+def crawl_webpage(page, thread_name, start, conn):
     # Robots parser
-    conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+    #conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
     try:
         # 1. Check domain robots and sitemap
         if page.robots_content is None:
@@ -153,7 +153,7 @@ def crawl_webpage(page, thread_name, start):
             database.write_page_data(conn, page.page_id, page.data_type, page.binary_data)
             database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
         #print(thread_name + " has finished")
-        conn.close()
+        #conn.close()
     except Exception as e:
         # Opaženi: requests.exceptions.ConnectTimeout, requests.exceptions.SSLError, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError)
         #timeout error na content, ssl error, timeout error na handshake, connection error
@@ -166,6 +166,6 @@ def crawl_webpage(page, thread_name, start):
         print(thread_name)
         print(page)
         print(e)
-        conn.close()
+        #conn.close()
         return
 

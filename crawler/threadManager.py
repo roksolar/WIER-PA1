@@ -15,9 +15,15 @@ frontier = database.getN_frontiers(connStart, max_workers)
 
 #get start hash
 start = time.time()
-database.get_hash_to_set(connStart)
+#database.get_hash_to_set(connStart)
 end = time.time()
 print("Hashing finished: "+str(end-start) + " there are "+str(len(database.hash_set)) + " different html pages in database")
+
+
+#make connections
+connections = []
+for i in range(max_workers):
+    connections.append(psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'"))
 
 # Timer
 start = time.time()
@@ -29,7 +35,7 @@ while frontier != -1:
         if i>=max_workers:
             break
         page = Page(*ele)
-        w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), start,))
+        w = threading.Thread(name='worker', target=crawler.crawl_webpage, args=(page, "Thread"+str(i), start, connections[i],))
         w.start()
         i = i + 1
     w.join()
@@ -38,3 +44,5 @@ while frontier != -1:
     #print("Thread loop finished: "+str(end-start))
 
 connStart.close()
+for i in range(max_workers):
+    connections[i].close()
