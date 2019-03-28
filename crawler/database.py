@@ -6,13 +6,9 @@ from sys import getsizeof
 hash_set = set()
 
 def get_hash_to_set(conn):
-    print("Started hashing existing pages")
-    html_content = get_hash(conn)
-    for element in html_content:
-        #print(getsizeof((element[0]).encode()))
-        #print(getsizeof(hashlib.md5((element[0]).encode()).hexdigest()))
-        hash_set.add(hashlib.md5((element[0]).encode()).hexdigest())
-
+    a = get_hash(conn)
+    for element in a:
+        hash_set.add(element[0])
 
 def write_url_to_database(conn, links, page_index):
     cur = conn.cursor()
@@ -28,7 +24,6 @@ def write_url_to_database(conn, links, page_index):
         except Exception as e:
             conn.rollback()
             conn.commit()
-            cur.close()
             #print(e)
         #print(index)
         if index == -1:
@@ -71,16 +66,16 @@ def write_url_to_database(conn, links, page_index):
             #print(e)
             #print("testasdas")
 
-def update_page(conn,page_type,html,http_status,accessed,url):
+def update_page(conn,page_type,html,http_status,accessed,url, hash):
     cur = conn.cursor()
     try:
-        sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s WHERE url=%s"
-        cur.execute(sql, (page_type, html, http_status, accessed, url,))
+        sql = "UPDATE crawldb.page SET page_type_code = %s,html_content=%s,http_status_code = %s,accessed_time = %s,html_content_hash = %s WHERE url=%s"
+        cur.execute(sql, (page_type, html, http_status, accessed, hash, url,))
         conn.commit()
         cur.close()
     except Exception as e:
         conn.rollback()
-        #print(e)
+        print(e)
         conn.commit()
         cur.close()
 
@@ -121,12 +116,13 @@ def write_page_data(conn,page_id,data_type_code,data):
 
 
 def write_image_to_database(conn,url, driver):
-    cur = conn.cursor()
+
 
     #get all images from url
     image_data = images.get_images(driver)
     #insert all images to database
     for image in image_data:
+        cur = conn.cursor()
         sql = 'INSERT INTO crawldb.image (page_id, filename,content_type,data,accessed_time) ' \
               'VALUES ((SELECT id from crawldb.page WHERE url=%s), %s, %s, %s , %s )'
         try:
@@ -163,7 +159,7 @@ def getN_frontiers(conn, n):
 
 def get_hash(conn):
     cur = conn.cursor()
-    sql = "SELECT html_content FROM crawldb.page WHERE http_status_code = '200' and page_type_code = 'HTML'"
+    sql = "SELECT html_content_hash FROM crawldb.page WHERE html_content_hash is not null"
     try:
         cur.execute(sql)
         conn.commit()
@@ -176,4 +172,30 @@ def get_hash(conn):
         cur.close()
         return -1
 
+def set_html_content_to_html_content_hash(conn):
+    cur = conn.cursor()
+    sql = "SELECT id,html_content FROM crawldb.page WHERE http_status_code = '200' and page_type_code = 'HTML' and html_content_hash is null LIMIT 1000"
+    try:
+        cur.execute(sql)
+        conn.commit()
+        a = cur.fetchall()
+        print("Hashing " + str(len(a)) + " pages!")
+        for element in a:
+            cur = conn.cursor()
+            temp_hash = hashlib.md5((element[1]).encode()).hexdigest()
+            try:
+                sql = "UPDATE crawldb.page SET html_content_hash = %s WHERE id = %s"
+                cur.execute(sql, (temp_hash, element[0], ))
+                conn.commit()
+                cur.close()
+            except Exception as e:
+                conn.rollback()
+                print(e)
+                conn.commit()
+                cur.close()
+        print("Hashed!")
 
+    except Exception as e:
+        conn.commit()
+        cur.close()
+        return -1

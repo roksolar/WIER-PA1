@@ -13,9 +13,11 @@ max_workers = 10
 connStart = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
 frontier = database.getN_frontiers(connStart, max_workers)
 
+database.set_html_content_to_html_content_hash(connStart)
+
 #get start hash
 start = time.time()
-#database.get_hash_to_set(connStart)
+database.get_hash_to_set(connStart)
 end = time.time()
 print("Hashing finished: "+str(end-start) + " there are "+str(len(database.hash_set)) + " different html pages in database")
 

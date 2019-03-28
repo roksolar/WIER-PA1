@@ -116,12 +116,12 @@ def crawl_webpage(page, thread_name, start, conn):
             if current_hash in database.hash_set:
                 page.page_type_code = "DUPLICATE"
             else:
+                print("NEW")
                 database.hash_set.add(current_hash)
             end = time.time()
             print("Checking for duplicates took : " + str(end - start))
-
             #update page
-            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url)
+            database.update_page(conn, page.page_type_code, page.html_content, page.http_status_code, page.accessed_time, page.url, current_hash)
             driver.quit()
             #driver.close()
 
