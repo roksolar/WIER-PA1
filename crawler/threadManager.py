@@ -34,7 +34,7 @@ for i in range(max_workers):
 start = time.time()
 
 
-while frontier != -1:
+while frontier != -1 and len(frontier) != 0:
     i = 0
     threads = []
     for ele in frontier:

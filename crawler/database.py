@@ -11,10 +11,11 @@ def get_hash_to_set(conn):
         hash_set.add(element[0])
 
 def write_url_to_database(conn, links, page_index):
-    cur = conn.cursor()
+
     for link in links:
         #print(link)
         #checking for unique url is done with unique url key
+        cur = conn.cursor()
         index = -1
         try:
             sql = "SELECT id FROM crawldb.site WHERE domain = %s"
