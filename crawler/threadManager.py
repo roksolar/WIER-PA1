@@ -5,10 +5,11 @@ from page import Page
 import time
 import psycopg2
 import hashlib
+import sys
 
 #url1 = "http://www.upravneenote.gov.si"
 
-max_workers = 15
+max_workers = int(sys.argv[1])
 # Get link from frontier
 connStart = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
 frontier = database.getN_frontiers(connStart, max_workers)
