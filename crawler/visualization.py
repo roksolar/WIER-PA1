@@ -4,7 +4,7 @@ import psycopg2
 from scipy import sparse
 import time
 start = time.time()
-conn = psycopg2.connect("host='localhost' dbname='postgres' user='postgres' password='test'")
+conn = psycopg2.connect("host='localhost' dbname='postgres2' user='postgres2' password='test2'")
 cur = conn.cursor()
 sql = '''select from_page,to_page,p1.page_type_code, p2.page_type_code from crawldb.link l, crawldb.page p1, crawldb.page p2 
 where l.from_page=p1.id and l.to_page=p2.id and l.to_page 
@@ -46,8 +46,8 @@ for source, end, type1, type2 in a:
             G.add_node(source,  node_size=3, width=0.5)
 
     if type2 == "HTML":
-        color_map.append("green")
         if end not in G.nodes:
+            color_map.append("green")
             G.add_node(end,  node_size=3, width=0.5)
     elif type2 == "BINARY":
         if end not in G.nodes:
@@ -73,3 +73,6 @@ print("nx draw končan...")
 end = time.time()
 print(end-start)
 plt.show()
+
+
+#TODO: NA NOVO ODDAJ VIZUALIZACIJO!!!!!!!!!!!!!!!!!!!!!!!!!!!
